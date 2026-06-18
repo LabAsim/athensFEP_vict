@@ -1,0 +1,10 @@
+*.sav
+.Rproj.user
+.Rhistory
+*.encr
+*example*
+*.rdata
+*.rds
+*.csl
+*.bib
+*.doc*
