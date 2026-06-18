@@ -8,3 +8,15 @@
 *.csl
 *.bib
 *.doc*
+*.xls
+*.xlsx
+*.csl
+*.bib
+*.doc*
+.vscode/
+*.json
+*.pptx
+*.tiff
+img/
+submission
+*extensions/
