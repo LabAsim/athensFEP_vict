@@ -183,22 +183,6 @@ modify_pred_matrix_scales <- function(
   pred_matrix
 }
 
-s <- modify_pred_matrix_scales(
-  pred_matrix = make.predictorMatrix(test),
-  item_pattern = "mpvs_item",
-  total_pattern = "mpvs_total"
-) %>%
-  modify_pred_matrix_scales(
-    item_pattern = "^PANSS1[png]_item",
-    total_pattern = "^PANSS1[png]?.*total"
-  ) %>%
-  modify_pred_matrix_scales(
-    item_pattern = "^PANSS2[png]_item",
-    total_pattern = "^PANSS2[png]?.*total"
-  )
-
-
-
 test_df <- data.frame(
   PANSS1p_item1 = 1,
   PANSS1p_item2 = 1,
