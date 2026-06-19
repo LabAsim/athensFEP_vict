@@ -2,7 +2,7 @@ library(mice)
 library(miceadds)
 library(micemd)
 library(beepr)
-
+source("helper.R")
 SEED <- 123
 set.seed(seed = SEED)
 
