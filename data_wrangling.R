@@ -1,7 +1,7 @@
 library(tidyverse)
 
 
-df_raw <- readxl::read_excel(path = "Athens FEP_lampros.xlsx")
+df_raw <- readxl::read_excel(path = "18.6_Athens FEP_Lampros.xlsx")
 
 name_map <- c(
   AGE = "age",
@@ -27,6 +27,9 @@ name_map <- c(
 
 df_named <- df_raw %>%
   rename(!!!setNames(names(name_map), name_map))
+
+# There is a misspelled PANSS column name
+names(df_named) <- gsub("PAMSS", "PANSS", names(df_named))
 
 # PANSS1p1 -> PANSS1p_item1
 names(df_named) <- gsub(
@@ -62,4 +65,9 @@ all.equal(
 all.equal(
   df_named$PANSS2.total,
   df_named$PANSS2p.total + df_named$PANSS2n.total + df_named$PANSS2g.total
+)
+
+all.equal(
+  df_named$PANSS3.total,
+  df_named$PANSS3p.total + df_named$PANSS3n.total + df_named$PANSS3g.total
 )
