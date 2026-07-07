@@ -34,6 +34,13 @@ df_imp <- df_named %>%
         "PANSS2p.total",
         "PANSS2n.total",
         "PANSS2.total",
+        grep("^PANSS3p_item\\d+$", names(df_named), value = TRUE),
+        grep("^PANSS3n_item\\d+$", names(df_named), value = TRUE),
+        grep("^PANSS3g_item\\d+$", names(df_named), value = TRUE),
+        "PANSS3g.total",
+        "PANSS3p.total",
+        "PANSS3n.total",
+        "PANSS3.total",
         # 4
         # CTQ1-25
         grep("^ctq_", names(df_named), value = TRUE),
@@ -64,12 +71,15 @@ predMatrix <- modify_pred_matrix_scales(
   modify_pred_matrix_scales(
     item_pattern = "^PANSS2[png]_item",
     total_pattern = "^PANSS2[png]?.*total"
+  ) %>%
+  modify_pred_matrix_scales(
+    item_pattern = "^PANSS3[png]_item",
+    total_pattern = "^PANSS3[png]?.*total"
   )
 
 # If we want to include the PANSS subscales, then these subscales should not
 # predict anything because collinearity issues arised in mice!
-predMatrix[, grep("^PANSS[12][png].total", names(df_named), value = TRUE)] <- 0
-
+predMatrix[, grep("^PANSS[123][png].total", names(df_named), value = TRUE)] <- 0
 
 
 predMatrix <- suppressWarnings( #
@@ -158,19 +168,47 @@ impMethod["PANSS2.total"] <- "~I(PANSS2p_item1 + PANSS2p_item2 + PANSS2p_item3 +
  PANSS2g_item9 + PANSS2g_item10 + PANSS2g_item11 + PANSS2g_item12 +
  PANSS2g_item13 + PANSS2g_item14 + PANSS2g_item15 + PANSS2g_item16)"
 
+impMethod["PANSS3p.total"] <- "~I(PANSS3p_item1 + PANSS3p_item2 + PANSS3p_item3 + PANSS3p_item4 +
+PANSS3p_item5 + PANSS3p_item6 + PANSS3p_item7)"
+
+impMethod["PANSS3n.total"] <- "~I(PANSS3n_item1 + PANSS3n_item2 + PANSS3n_item3 + PANSS3n_item4 +
+PANSS3n_item5 + PANSS3n_item6 + PANSS3n_item7)"
+
+impMethod["PANSS3g.total"] <- "~I(PANSS3g_item1 + PANSS3g_item2 + PANSS3g_item3 + PANSS3g_item4 +
+PANSS3g_item5 + PANSS3g_item6 + PANSS3g_item7 + PANSS3g_item8 +
+PANSS3g_item9 + PANSS3g_item10 + PANSS3g_item11 + PANSS3g_item12 +
+PANSS3g_item13 + PANSS3g_item14 + PANSS3g_item15 + PANSS3g_item16)"
+
+impMethod["PANSS3.total"] <- "~I(PANSS3p_item1 + PANSS3p_item2 + PANSS3p_item3 + PANSS3p_item4 +
+PANSS3p_item5 + PANSS3p_item6 + PANSS3p_item7 +
+PANSS3n_item1 + PANSS3n_item2 + PANSS3n_item3 + PANSS3n_item4 +
+PANSS3n_item5 + PANSS3n_item6 + PANSS3n_item7 +
+PANSS3g_item1 + PANSS3g_item2 + PANSS3g_item3 + PANSS3g_item4 +
+PANSS3g_item5 + PANSS3g_item6 + PANSS3g_item7 + PANSS3g_item8 +
+PANSS3g_item9 + PANSS3g_item10 + PANSS3g_item11 + PANSS3g_item12 +
+PANSS3g_item13 + PANSS3g_item14 + PANSS3g_item15 + PANSS3g_item16)"
 
 ###########
 # Impute! #
 ###########
 start_time <- Sys.time()
-imp <- mice(
+imp_data <- mice(
   df_imp,
   method = impMethod,
   predictorMatrix = predMatrix,
-  maxit = 5,
-  m = 5,
-  donors = 5
+  maxit = 100,
+  m = 25,
+  donors = 5,
+  printFlag = F,
+  seed = SEED
 )
-View(imp$loggedEvents)
-print(imp$visitSequence)
+View(imp_data$loggedEvents)
+print(imp_data$visitSequence)
 print(Sys.time() - start_time)
+
+save(
+  imp_data, df_named, df_raw, df_imp, predMatrix,
+  file = "imp.Rdata"
+)
+
+# plot(imp_data)
