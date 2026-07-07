@@ -198,7 +198,7 @@ modify_pred_matrix_scales <- function(
 
   diag(pred_matrix) <- 0
 
-  pred_matrix
+  return(pred_matrix)
 }
 
 test_df <- data.frame(
@@ -341,3 +341,162 @@ testthat::test_that("predictor matrix is valid binary matrix", {
 rm(test_df)
 rm(pred)
 #######################################
+
+
+color_corr_residuals <- function(resid_df, limit, bg_color) {
+  ft <- flextable::flextable(data = resid_df) |>
+    flextable::bg(
+      # https://stackoverflow.com/a/11672966
+      j = base::setdiff(
+        x = colnames(resid_df),
+        y = "vars"
+      ),
+      bg = function(x) {
+        dplyr::case_when(
+          abs(x) > limit ~ bg_color,
+          # x < -0.1 ~ "gray",
+          TRUE ~ "white"
+        )
+      }
+    )
+  return(ft)
+}
+
+
+add_labels_cols <- function(df) {
+  df <- df |>
+    mutate(
+      to = case_when(
+        lhs == "PANSS1.total" ~ "PANSS Total (T1)",
+        lhs == "PANSS2.total" ~ "PANSS Total (T2)",
+        lhs == "PANSS3.total" ~ "PANSS Total (T3)",
+        lhs == "gender" ~ "Gender",
+        lhs == "age" ~ "Age",
+        lhs == "mpvs_total_score" ~ "MPVS",
+        lhs == "employment_ever" ~ "Ever employed"
+      )
+    ) |>
+    mutate(
+      from = case_when(
+        rhs == "PANSS1.total" ~ "PANSS Total (T1)",
+        rhs == "PANSS2.total" ~ "PANSS Total (T2)",
+        rhs == "PANSS3.total" ~ "PANSS Total (T3)",
+        rhs == "gender" ~ "Gender",
+        rhs == "age" ~ "Age",
+        rhs == "mpvs_total_score" ~ "MPVS",
+        rhs == "employment_ever" ~ "Ever employed"
+      )
+    )
+}
+##################
+replace_target <- function(data, columns, mapping) {
+  data[columns] <- lapply(data[columns], function(x) {
+    idx <- x %in% names(mapping)
+    x[idx] <- unname(mapping[x[idx]])
+    return(x)
+  })
+
+  return(data)
+}
+library(testthat)
+
+test_that("mapped values are replaced in a single column", {
+  df <- data.frame(
+    outcome = c("mpvs_total_score", "height"),
+    stringsAsFactors = FALSE
+  )
+
+  mapping <- c(
+    mpvs_total_score = "MPVS"
+  )
+
+  result <- replace_target(df, "outcome", mapping)
+
+  expect_equal(result$outcome, c("MPVS", "height"))
+})
+
+test_that("mapped values are replaced in multiple columns", {
+  df <- data.frame(
+    outcome = c("mpvs_total_score", "height"),
+    predictor = c("age_years", "weight"),
+    stringsAsFactors = FALSE
+  )
+
+  mapping <- c(
+    mpvs_total_score = "MPVS",
+    age_years = "Age"
+  )
+
+  result <- replace_target(df, c("outcome", "predictor"), mapping)
+
+  expect_equal(result$outcome, c("MPVS", "height"))
+  expect_equal(result$predictor, c("Age", "weight"))
+})
+
+test_that("unmapped values remain unchanged", {
+  df <- data.frame(
+    outcome = c("height", "weight"),
+    predictor = c("sex", "site"),
+    stringsAsFactors = FALSE
+  )
+
+  mapping <- c(
+    mpvs_total_score = "MPVS"
+  )
+
+  result <- replace_target(df, c("outcome", "predictor"), mapping)
+
+  expect_identical(result, df)
+})
+
+test_that("columns not listed are left unchanged", {
+  df <- data.frame(
+    outcome = c("mpvs_total_score", "height"),
+    predictor = c("age_years", "weight"),
+    stringsAsFactors = FALSE
+  )
+
+  mapping <- c(
+    mpvs_total_score = "MPVS",
+    age_years = "Age"
+  )
+
+  result <- replace_target(df, "outcome", mapping)
+
+  expect_equal(result$outcome, c("MPVS", "height"))
+  expect_equal(result$predictor, c("age_years", "weight"))
+})
+
+test_that("original data frame is not modified", {
+  df <- data.frame(
+    outcome = c("mpvs_total_score"),
+    stringsAsFactors = FALSE
+  )
+
+  mapping <- c(
+    mpvs_total_score = "MPVS"
+  )
+
+  original <- df
+
+  result <- replace_target(df, "outcome", mapping)
+
+  expect_identical(df, original)
+  expect_equal(result$outcome, "MPVS")
+})
+
+test_that("works with an empty vector of columns", {
+  df <- data.frame(
+    outcome = c("mpvs_total_score"),
+    stringsAsFactors = FALSE
+  )
+
+  mapping <- c(
+    mpvs_total_score = "MPVS"
+  )
+
+  result <- replace_target(df, character(0), mapping)
+
+  expect_identical(result, df)
+})
+###################
