@@ -342,6 +342,26 @@ rm(test_df)
 rm(pred)
 #######################################
 
+change_df_labels <- function(df, labels) {
+  new_labels <- c()
+  for (name in colnames(df)) {
+    if (name %in% names(labels)) {
+      new_labels <- append(new_labels, labels[[name]])
+    } else {
+      new_labels <- append(new_labels, name)
+    }
+  }
+  colnames(df) <- new_labels
+  rownames(df) <- new_labels
+  return(df)
+}
+
+extract_cov_residuals <- function(residual_obj) {
+  cov_resid <- as.data.frame(residual_obj[["cov"]])
+  colnames(cov_resid)
+  return(cov_resid)
+}
+
 
 color_corr_residuals <- function(resid_df, limit, bg_color) {
   ft <- flextable::flextable(data = resid_df) |>
@@ -500,3 +520,154 @@ test_that("works with an empty vector of columns", {
   expect_identical(result, df)
 })
 ###################
+#
+# modify_parameter_estimates <- function(
+#   df,
+#   round_digits = 3,
+#   add_equal_sign = T
+# ) {
+#   df[] <- lapply(
+#     X = df[],
+#     FUN = function(x) {
+#       if (is.character(x) == F) {
+#         x <- round(x, digits = round_digits)
+#         return(x)
+#       } else {
+#         return(x)
+#       }
+#     }
+#   )
+#   df <- df %>%
+#     mutate(
+#       pvalue_str = case_when(
+#         .data[["pvalue"]] < 0.001 ~ "<0.001",
+#         .default = if (add_equal_sign == F) {
+#           as.character(
+#             round(.data[["pvalue"]], digits = round_digits)
+#           )
+#         } else {
+#           as.character(
+#             glue::glue(
+#               "={as.character(round(.data[['pvalue']], digits = round_digits))}"
+#             )
+#           )
+#         }
+#       )
+#     )
+#   return(df)
+# }
+#
+#
+# test_that("correct output", {
+#   test <- data.frame(
+#     pvalue = c(0, 1, 0.001, 0.1, 0.5, 0.0001)
+#   )
+#   testit <- modify_parameter_estimates(df = test)
+#
+#   correct_output <- data.frame(
+#     pvalue = c(0, 1, 0.001, 0.1, 0.5, 0),
+#     pvalue_str = c("<0.001", "=1", "=0.001", "=0.1", "=0.5", "<0.001")
+#   )
+#
+#   expect_equal(correct_output, testit)
+# })
+
+##
+
+wrap_edges <- function(edges, parameters) {
+  # print(parameters)
+  # parameters <- parameters
+  # Replace names with their corresponding labels
+  edges <- replace_target(
+    data = edges,
+    column = c("name", "to"),
+    mapping = c(
+      "PANSS1.total" = "PANSS Total (T1)",
+      "PANSS2.total" = "PANSS Total (T2)",
+      "gender" = "Gender",
+      "age" = "Age",
+      "mpvs_total_score" = "MPVS",
+      "employment_ever" = "Ever employed"
+    )
+  )
+
+  temp <- data.frame(
+    # Extract only the regression paths
+    parameters[
+      parameters$op == "~",
+    ]
+  ) %>%
+    replace_target(
+      columns = c("lhs", "rhs"),
+      mapping = c(
+        "PANSS1.total" = "PANSS Total (T1)",
+        "PANSS2.total" = "PANSS Total (T2)",
+        "gender" = "Gender",
+        "age" = "Age",
+        "mpvs_total_score" = "MPVS",
+        "employment_ever" = "Ever employed"
+      )
+    )
+
+  edges <- left_join(
+    x = edges,
+    y = temp,
+    by = join_by(
+      name == rhs,
+      to == lhs
+    )
+  )
+
+  edges$curvature <- 0
+
+  edges <- edges %>%
+    filter(!is.na(to)) %>%
+    transmute(
+      from = name,
+      to = to,
+      curvature = curvature,
+      pvalue = pvalue,
+      est = est,
+      ci.lower = ci.lower,
+      ci.upper = ci.upper
+    )
+  edges$curvature_amount <- 0
+  edges$gap <- -1
+  edges <- edges %>%
+    mutate(
+      hjust = case_when(
+        curvature == 1 & pvalue <= 0.05 ~ 0.6,
+        curvature == 1 & pvalue > 0.05 ~ 0.5,
+        pvalue <= 0.05 ~ 0.5,
+        TRUE ~ 0.5,
+      )
+    ) %>%
+    mutate(
+      hjust = case_when(
+        # from == "MPVS12" & to == "MPVS16" ~ 0.8,
+        from == "Gender" & to == "PANSS Total (T2)" ~ 0.8,
+        from == "Ever employed" & to == "PANSS Total (T1)" ~ 0.6,
+        from == "PANSS Total (T1)" & to == "MPVS" ~ 0.3,
+        from == "Ever employed" & to == "PANSS Total (T2)" ~ 0.55,
+        from == "Age" & to == "MPVS" ~ 0.3,
+        .default = 0.5
+      )
+    ) %>%
+    mutate(
+      vjust = case_when(
+        # from == "MPVS12" & to == "MPVS16" ~ 0.8,
+        # from == "MPVS14" & to == "MPVS21" ~ 0.8,
+        # from == "Gender" & to == "PANSS Total (T2)" ~ 1,
+        from == "Gender" & to == "PANSS Total (T1)" ~ 0.8,
+        from == "Ever employed" & to == "PANSS Total (T1)" ~ 0.2,
+        .default = 0.5
+      )
+    ) %>%
+    mutate(
+      vertical_label_position = case_when(
+        from == "Age" & to == "PANSS Total (T1)" ~ 0,
+        .default = 0.5
+      )
+    )
+  return(edges)
+}
