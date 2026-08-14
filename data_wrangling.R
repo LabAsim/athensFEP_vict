@@ -56,6 +56,19 @@ df_named[df_named == 777] <- NA # This value appears in AGE_OF_MIGRATION
 df_named[df_named == 999] <- NA # This indicates NA
 df_named[df_named == 9999] <- NA # This probably is also NA
 
+df_named[
+  df_named$employment_ever == 10 & is.na(df_named$employment_ever) == F,
+  c("employment_ever")
+] <- NA
+
+
+df_named[
+  df_named$employment_ever == 0 & is.na(df_named$employment_ever) == F,
+  c("employment_ever")
+] <- NA
+
+
+df_named$employment_ever_fct <- as.factor(df_named$employment_ever)
 # View(explore::describe(df_named))
 
 all.equal(
@@ -70,4 +83,11 @@ all.equal(
 all.equal(
   df_named$PANSS3.total,
   df_named$PANSS3p.total + df_named$PANSS3n.total + df_named$PANSS3g.total
+)
+
+
+df_named$gender_fct <- factor(
+  df_named$gender,
+  levels = c(1, 2),
+  labels = c("Male", "Female")
 )
