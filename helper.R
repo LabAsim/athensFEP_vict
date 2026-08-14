@@ -671,3 +671,109 @@ wrap_edges <- function(edges, parameters) {
     )
   return(edges)
 }
+
+###############################
+# list_to_individual_formulas #
+###############################
+list_to_individual_formulas <- function(var_labels, all_string = F) {
+  var_names <- names(var_labels)
+  formulas_list <- lapply(var_names, function(var) {
+    # Get the label value for this variable
+    label <- var_labels[[var]]
+    # Create formula: variable ~ label
+    if (all_string == T) {
+      formula_str <- paste(
+        shQuote(var, type = 'cmd'),
+        '~',
+        shQuote(label, type = 'cmd')
+      )
+    } else {
+      formula_str <- paste(var, '~', shQuote(label, type = 'cmd'))
+    }
+
+    as.formula(formula_str)
+  })
+  names(formulas_list) <- var_names
+  return(formulas_list)
+}
+
+
+test_that("returns a list of formulas with correct names", {
+  # Setup
+  var_labels <- c(
+    age = "Age in years",
+    income = "Annual income"
+  )
+
+  # Execute
+  result <- list_to_individual_formulas(var_labels)
+
+  # Verify
+  expect_type(result, "list")
+  expect_named(result, c("age", "income"))
+  expect_length(result, 2)
+})
+
+test_that("creates valid formulas with shQuoted labels", {
+  var_labels <- c(
+    weight = "weight measurement"
+  )
+
+  result <- list_to_individual_formulas(var_labels)
+
+  # Check formula class
+  expect_s3_class(result$weight, "formula")
+
+  # Check formula structure
+  expect_equal(as.character(result$weight)[2], "weight")
+  expect_equal(as.character(result$weight)[3], "weight measurement")
+})
+
+
+test_that("handles empty input gracefully", {
+  var_labels <- character(0)
+  names(var_labels) <- character(0)
+
+  result <- list_to_individual_formulas(var_labels)
+
+  expect_type(result, "list")
+  expect_length(result, 0)
+  expect_named(result, character(0))
+})
+
+test_that("handles single element input", {
+  var_labels <- c(x = "single label")
+
+  result <- list_to_individual_formulas(var_labels)
+
+  expect_length(result, 1)
+  expect_s3_class(result$x, "formula")
+  expect_equal(as.character(result$x)[1], "~")
+  expect_equal(as.character(result$x)[2], "x")
+})
+
+test_that("formulas can be evaluated without error", {
+  var_labels <- c(
+    y = "outcome variable"
+  )
+
+  result <- list_to_individual_formulas(var_labels)
+
+  # Should be able to use the formula in typical operations
+  expect_no_error(eval(result$y))
+})
+
+test_that("preserves original variable names", {
+  var_labels <- c(
+    `var.with.dots` = "Label with dots",
+    `var123` = "Numbered variable"
+  )
+
+  result <- list_to_individual_formulas(var_labels)
+
+  expect_named(result, c("var.with.dots", "var123"))
+
+  # Formula LHS should match variable name
+  expect_equal(deparse(result$`var.with.dots`[[2]]), "var.with.dots")
+  expect_equal(deparse(result$`var123`[[2]]), "var123")
+})
