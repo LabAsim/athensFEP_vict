@@ -46,7 +46,8 @@ df_imp <- df_named %>%
         grep("^ctq_", names(df_named), value = TRUE),
         # >5
         colnames(df_named)[grepl(
-          pattern = "mpvs_item", x = colnames(df_named)
+          pattern = "mpvs_item",
+          x = colnames(df_named)
         )],
         "mpvs_total_score"
       )
@@ -82,7 +83,7 @@ predMatrix <- modify_pred_matrix_scales(
 predMatrix[, grep("^PANSS[123][png].total", names(df_named), value = TRUE)] <- 0
 
 
-predMatrix <- suppressWarnings( #
+predMatrix <- suppressWarnings(
   exclude_collinear_vars(
     pred_matrix = predMatrix,
     corr_mat = as.data.frame(
@@ -150,36 +151,52 @@ impMethod["PANSS1.total"] <- "~I(PANSS1p_item1 + PANSS1p_item2 +
  PANSS1g_item13 + PANSS1g_item14 + PANSS1g_item15 + PANSS1g_item16)"
 
 
-impMethod["PANSS2p.total"] <- "~I(PANSS2p_item1 + PANSS2p_item2 + PANSS2p_item3 + PANSS2p_item4 +
+impMethod[
+  "PANSS2p.total"
+] <- "~I(PANSS2p_item1 + PANSS2p_item2 + PANSS2p_item3 + PANSS2p_item4 +
 PANSS2p_item5 + PANSS2p_item6 + PANSS2p_item7)"
 
-impMethod["PANSS2n.total"] <- "~I(PANSS2n_item1 + PANSS2n_item2 + PANSS2n_item3 + PANSS2n_item4 +
+impMethod[
+  "PANSS2n.total"
+] <- "~I(PANSS2n_item1 + PANSS2n_item2 + PANSS2n_item3 + PANSS2n_item4 +
 PANSS2n_item5 + PANSS2n_item6 + PANSS2n_item7)"
 
-impMethod["PANSS2g.total"] <- "~I(PANSS2g_item1 + PANSS2g_item2 + PANSS2g_item3 + PANSS2g_item4 +
+impMethod[
+  "PANSS2g.total"
+] <- "~I(PANSS2g_item1 + PANSS2g_item2 + PANSS2g_item3 + PANSS2g_item4 +
 PANSS2g_item5 + PANSS2g_item6 + PANSS2g_item7 + PANSS2g_item8 +
 PANSS2g_item9 + PANSS2g_item10 + PANSS2g_item11 + PANSS2g_item12 +
 PANSS2g_item13 + PANSS2g_item14 + PANSS2g_item15 + PANSS2g_item16)"
 
-impMethod["PANSS2.total"] <- "~I(PANSS2p_item1 + PANSS2p_item2 + PANSS2p_item3 + PANSS2p_item4 +
+impMethod[
+  "PANSS2.total"
+] <- "~I(PANSS2p_item1 + PANSS2p_item2 + PANSS2p_item3 + PANSS2p_item4 +
  PANSS2p_item5 + PANSS2p_item6 + PANSS2p_item7+PANSS2n_item1 + PANSS2n_item2 + PANSS2n_item3 + PANSS2n_item4 +
  PANSS2n_item5 + PANSS2n_item6 + PANSS2n_item7+PANSS2g_item1 + PANSS2g_item2 + PANSS2g_item3 + PANSS2g_item4 +
  PANSS2g_item5 + PANSS2g_item6 + PANSS2g_item7 + PANSS2g_item8 +
  PANSS2g_item9 + PANSS2g_item10 + PANSS2g_item11 + PANSS2g_item12 +
  PANSS2g_item13 + PANSS2g_item14 + PANSS2g_item15 + PANSS2g_item16)"
 
-impMethod["PANSS3p.total"] <- "~I(PANSS3p_item1 + PANSS3p_item2 + PANSS3p_item3 + PANSS3p_item4 +
+impMethod[
+  "PANSS3p.total"
+] <- "~I(PANSS3p_item1 + PANSS3p_item2 + PANSS3p_item3 + PANSS3p_item4 +
 PANSS3p_item5 + PANSS3p_item6 + PANSS3p_item7)"
 
-impMethod["PANSS3n.total"] <- "~I(PANSS3n_item1 + PANSS3n_item2 + PANSS3n_item3 + PANSS3n_item4 +
+impMethod[
+  "PANSS3n.total"
+] <- "~I(PANSS3n_item1 + PANSS3n_item2 + PANSS3n_item3 + PANSS3n_item4 +
 PANSS3n_item5 + PANSS3n_item6 + PANSS3n_item7)"
 
-impMethod["PANSS3g.total"] <- "~I(PANSS3g_item1 + PANSS3g_item2 + PANSS3g_item3 + PANSS3g_item4 +
+impMethod[
+  "PANSS3g.total"
+] <- "~I(PANSS3g_item1 + PANSS3g_item2 + PANSS3g_item3 + PANSS3g_item4 +
 PANSS3g_item5 + PANSS3g_item6 + PANSS3g_item7 + PANSS3g_item8 +
 PANSS3g_item9 + PANSS3g_item10 + PANSS3g_item11 + PANSS3g_item12 +
 PANSS3g_item13 + PANSS3g_item14 + PANSS3g_item15 + PANSS3g_item16)"
 
-impMethod["PANSS3.total"] <- "~I(PANSS3p_item1 + PANSS3p_item2 + PANSS3p_item3 + PANSS3p_item4 +
+impMethod[
+  "PANSS3.total"
+] <- "~I(PANSS3p_item1 + PANSS3p_item2 + PANSS3p_item3 + PANSS3p_item4 +
 PANSS3p_item5 + PANSS3p_item6 + PANSS3p_item7 +
 PANSS3n_item1 + PANSS3n_item2 + PANSS3n_item3 + PANSS3n_item4 +
 PANSS3n_item5 + PANSS3n_item6 + PANSS3n_item7 +
@@ -199,7 +216,7 @@ imp_data <- mice(
   maxit = 100,
   m = 25,
   donors = 5,
-  printFlag = F,
+  printFlag = T,
   seed = SEED
 )
 View(imp_data$loggedEvents)
@@ -207,7 +224,11 @@ print(imp_data$visitSequence)
 print(Sys.time() - start_time)
 
 save(
-  imp_data, df_named, df_raw, df_imp, predMatrix,
+  imp_data,
+  df_named,
+  df_raw,
+  df_imp,
+  predMatrix,
   file = "imp.Rdata"
 )
 
