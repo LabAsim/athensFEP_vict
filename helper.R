@@ -1,5 +1,5 @@
 library(tidyverse)
-
+source("constants.R")
 ##################################
 
 exclude_collinear_vars <- function(
@@ -581,14 +581,7 @@ wrap_edges <- function(edges, parameters) {
   edges <- replace_target(
     data = edges,
     column = c("name", "to"),
-    mapping = c(
-      "PANSS1.total" = "PANSS Total (T1)",
-      "PANSS2.total" = "PANSS Total (T2)",
-      "gender" = "Gender",
-      "age" = "Age",
-      "mpvs_total_score" = "MPVS",
-      "employment_ever" = "Ever employed"
-    )
+    mapping = MAPPING
   )
 
   temp <- data.frame(
@@ -599,14 +592,7 @@ wrap_edges <- function(edges, parameters) {
   ) %>%
     replace_target(
       columns = c("lhs", "rhs"),
-      mapping = c(
-        "PANSS1.total" = "PANSS Total (T1)",
-        "PANSS2.total" = "PANSS Total (T2)",
-        "gender" = "Gender",
-        "age" = "Age",
-        "mpvs_total_score" = "MPVS",
-        "employment_ever" = "Ever employed"
-      )
+      mapping = MAPPING
     )
 
   edges <- left_join(
@@ -635,8 +621,26 @@ wrap_edges <- function(edges, parameters) {
   edges$gap <- -1
   edges <- edges %>%
     mutate(
+      gap = case_when(
+        from == "PANSS Total (T1)" & to == "PANSS Total (T3)" ~ 3,
+        .default = gap
+      )
+    ) |>
+    mutate(
+      curvature = case_when(
+        from == "PANSS Total (T1)" & to == "PANSS Total (T3)" ~ 1,
+        .default = curvature
+      )
+    ) |>
+    mutate(
+      curvature_amount = case_when(
+        from == "PANSS Total (T1)" & to == "PANSS Total (T3)" ~ -0.1,
+        .default = curvature_amount
+      )
+    ) |>
+    mutate(
       hjust = case_when(
-        curvature == 1 & pvalue <= 0.05 ~ 0.6,
+        curvature == 1 & pvalue <= 0.05 ~ 0.5,
         curvature == 1 & pvalue > 0.05 ~ 0.5,
         pvalue <= 0.05 ~ 0.5,
         TRUE ~ 0.5,
@@ -645,11 +649,13 @@ wrap_edges <- function(edges, parameters) {
     mutate(
       hjust = case_when(
         # from == "MPVS12" & to == "MPVS16" ~ 0.8,
-        from == "Gender" & to == "PANSS Total (T2)" ~ 0.8,
+        from == "PANSS Total (T1)" & to == "PANSS Total (T3)" ~ 0.6,
+        from == "Gender" & to == "PANSS Total (T2)" ~ 0.75,
+        from == "Gender" & to == "PANSS Total (T3)" ~ 0.4,
         from == "Ever employed" & to == "PANSS Total (T1)" ~ 0.6,
         from == "PANSS Total (T1)" & to == "MPVS" ~ 0.3,
-        from == "Ever employed" & to == "PANSS Total (T2)" ~ 0.55,
-        from == "Age" & to == "MPVS" ~ 0.3,
+        from == "Ever employed" & to == "PANSS Total (T2)" ~ 0.5,
+        from == "Age" & to == "MPVS" ~ 0.15,
         .default = 0.5
       )
     ) %>%
@@ -658,6 +664,7 @@ wrap_edges <- function(edges, parameters) {
         # from == "MPVS12" & to == "MPVS16" ~ 0.8,
         # from == "MPVS14" & to == "MPVS21" ~ 0.8,
         # from == "Gender" & to == "PANSS Total (T2)" ~ 1,
+        from == "MPVS" & to == "PANSS Total (T2)" ~ -1.5,
         from == "Gender" & to == "PANSS Total (T1)" ~ 0.8,
         from == "Ever employed" & to == "PANSS Total (T1)" ~ 0.2,
         .default = 0.5
@@ -669,6 +676,42 @@ wrap_edges <- function(edges, parameters) {
         .default = 0.5
       )
     )
+  # edges %>%
+  # mutate(
+  #   hjust = case_when(
+  #     curvature == 1 & pvalue <= 0.05 ~ 0.6,
+  #     curvature == 1 & pvalue > 0.05 ~ 0.5,
+  #     pvalue <= 0.05 ~ 0.5,
+  #     TRUE ~ 0.5,
+  #   )
+  # ) %>%
+  # mutate(
+  #   hjust = case_when(
+  #     # from == "MPVS12" & to == "MPVS16" ~ 0.8,
+  #     from == "Gender" & to == "PANSS Total (T2)" ~ 0.8,
+  #     from == "Ever employed" & to == "PANSS Total (T1)" ~ 0.6,
+  #     from == "PANSS Total (T1)" & to == "MPVS" ~ 0.3,
+  #     from == "Ever employed" & to == "PANSS Total (T2)" ~ 0.55,
+  #     from == "Age" & to == "MPVS" ~ 0.3,
+  #     .default = 0.5
+  #   )
+  # ) %>%
+  # mutate(
+  #   vjust = case_when(
+  #     # from == "MPVS12" & to == "MPVS16" ~ 0.8,
+  #     # from == "MPVS14" & to == "MPVS21" ~ 0.8,
+  #     # from == "Gender" & to == "PANSS Total (T2)" ~ 1,
+  #     from == "Gender" & to == "PANSS Total (T1)" ~ 0.8,
+  #     from == "Ever employed" & to == "PANSS Total (T1)" ~ 0.2,
+  #     .default = 0.5
+  #   )
+  # ) %>%
+  # mutate(
+  #   vertical_label_position = case_when(
+  #     from == "Age" & to == "PANSS Total (T1)" ~ 0,
+  #     .default = 0.5
+  #   )
+  # )
   return(edges)
 }
 
