@@ -1,15 +1,32 @@
 library(gtsummary)
 library(tidyverse)
+source("helper.R")
+
+needed <- df_named |>
+  select(-contains("item")) |>
+  select(
+    all_of(
+      c(
+        "gender_fct",
+        "age",
+        "employment_ever_fct",
+        "PANSS1.total",
+        "PANSS2.total",
+        "PANSS3.total",
+        "mpvs_total_score"
+      )
+    )
+  ) # |> select(!all_of("PANSS3.total"))
 
 
-needed <- df_imp |> select(!all_of("PANSS3.total"))
 labels_list <- list(
   "PANSS1.total" ~ "PANSS Total (T1)",
   "PANSS2.total" ~ "PANSS Total (T2)",
-  #"gender" ~ "Gender",
+  "PANSS3.total" ~ "PANSS Total (T3)",
+  # "gender_fct" ~ "Gender",
   "age" ~ "Age",
   "mpvs_total_score" ~ "MPVS",
-  "employment_ever" ~ "Ever employed"
+  "employment_ever_fct" ~ "Ever employed"
 )
 
 labels_list_deparsed <- lapply(
@@ -34,14 +51,14 @@ labels_list_deparsed <- lapply(
 
 summary_all2 <- needed |>
   gtsummary::tbl_summary(
-    by = gender,
+    by = gender_fct,
     statistic = list(
       all_categorical() ~ "{n}    ({p}%)",
       all_continuous() ~ "{mean} ({sd})"
     ),
     type = list(
       # gender ~ "categorical",
-      employment_ever ~ "categorical"
+      employment_ever_fct ~ "categorical"
     ),
     missing_text = "Missing",
     missing_stat = "{N_miss} ({p_miss}%)",
@@ -96,10 +113,11 @@ corr_mat <- cor(
 vars <- c(
   "PANSS1.total",
   "PANSS2.total",
+  "PANSS3.total",
   "mpvs_total_score",
   "age",
-  "gender",
-  "employment_ever"
+  "gender_fct",
+  "employment_ever_fct"
 )
 
 # P-values
@@ -150,13 +168,13 @@ corr_display <- matrix(
 
 corr_display[upper.tri(corr_display)] <- ""
 diag(corr_display) <- ""
-list(
+VAR_LABELS <- list(
   "PANSS1.total" = "PANSS Total (T1)",
   "PANSS2.total" = "PANSS Total (T2)",
-  "gender" = "Gender",
+  "gender_fct" = "Gender",
   "age" = "Age",
   "mpvs_total_score" = "MPVS",
-  "employment_ever" = "Ever employed"
+  "employment_ever_fct" = "Ever employed"
 )
 
 table_corr_mat_mpvs_dcq <- corr_display |>
@@ -174,10 +192,11 @@ table_corr_mat_mpvs_dcq <- corr_display |>
   gt::text_case_match(
     "PANSS1.total" ~ "PANSS Total (T1)",
     "PANSS2.total" ~ "PANSS Total (T2)",
-    "gender" ~ "Gender",
+    "PANSS3.total" ~ "PANSS Total (T3)",
+    "gender_fct" ~ "Gender",
     "age" ~ "Age",
     "mpvs_total_score" ~ "MPVS",
-    "employment_ever" ~ "Ever employed",
+    "employment_ever_fct" ~ "Ever employed",
     .locations = gt::cells_stub()
   ) |>
   # gt::fmt_number(
