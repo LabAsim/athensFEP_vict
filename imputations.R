@@ -213,8 +213,11 @@ imp_data <- mice(
   df_imp,
   method = impMethod,
   predictorMatrix = predMatrix,
-  maxit = 100,
-  m = 25,
+  # For m, see
+  # https://pmc.ncbi.nlm.nih.gov/articles/PMC4289583/table/Tab1/
+  # https://rct-tutorial.mharrer.dev/missing-data
+  maxit = 50,
+  m = 50,
   donors = 5,
   printFlag = T,
   seed = SEED
@@ -233,3 +236,5 @@ save(
 )
 
 # plot(imp_data)
+# fx <- mice::fluxplot(df_imp)
+# fx
