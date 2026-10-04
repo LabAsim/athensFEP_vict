@@ -1,14 +1,15 @@
 library(lavaan)
-
+library(Lmisc)
 source("helper.R")
-
-df_imp <- df_named |>
+source("constants.R")
+df_selected <- df_named |>
   select(
     all_of(
       c(
-        "gender",
+        "gender_fct",
         "age",
         "employment_ever",
+        "employment_ever_fct",
         "PANSS1.total",
         "PANSS2.total",
         "PANSS3.total",
@@ -18,30 +19,56 @@ df_imp <- df_named |>
   )
 
 
+#####################
+# Linear regression #
+#####################
+
+model_lm1 <- lm(
+  mpvs_total_score ~ PANSS1.total + age + gender_fct + employment_ever_fct,
+  data = df_selected
+)
+
+summary(model_lm1)
+
+model_lm2 <- lm(
+  PANSS2.total ~
+    mpvs_total_score + PANSS1.total + age + gender_fct + employment_ever_fct,
+  data = df_selected
+)
+
+summary(model_lm2)
+
 #######
 # SEM #
 #######
 model <- "
-PANSS1.total ~ gender
+PANSS1.total ~ gender_fct
 PANSS1.total ~ age
-PANSS1.total ~ employment_ever
+PANSS1.total ~ employment_ever_fct
 
-
-PANSS2.total ~ gender
+PANSS2.total ~ gender_fct
 PANSS2.total ~ age
-PANSS2.total ~ employment_ever
+PANSS2.total ~ employment_ever_fct
 PANSS2.total ~ PANSS1.total
+PANSS2.total ~ mpvs_total_score
 
-mpvs_total_score ~ gender
+
+PANSS3.total ~ gender_fct
+PANSS3.total ~ age
+PANSS3.total ~ employment_ever_fct
+PANSS3.total ~ PANSS1.total
+PANSS3.total ~ PANSS2.total
+PANSS3.total ~ mpvs_total_score
+
+mpvs_total_score ~ gender_fct
 mpvs_total_score ~ age
 mpvs_total_score ~ PANSS1.total
-mpvs_total_score ~ PANSS2.total
 "
 
 
 model_ml <- sem(
   model = model,
-  data = df_imp
+  data = df_selected
 )
 summary(model_ml)
 
@@ -54,7 +81,7 @@ model_ml_residuals <- round(
         type = "cor.bollen"
       )
     ),
-    labels = VAR_LABELS
+    labels = MAPPING
   ),
   digits = 3
 )
@@ -66,6 +93,8 @@ color_corr_residuals(
   bg_color = "gray"
 )
 
+# To adjust the model
+# modindices(model_ml)
 
 parameters_model_ml_unstd <- Lmisc::modify_parameter_estimates(
   df = parameterestimates(
@@ -81,22 +110,13 @@ parameters_model_ml_unstd <- Lmisc::modify_parameter_estimates(
 ########
 model_fiml <- sem(
   model = model,
-  data = df_imp,
+  data = df_selected,
   missing = "fiml"
 )
 summary(model_fiml)
 
 modificationIndices(model_fiml, sort. = T)
 
-VAR_LABELS <- c(
-  "PANSS1.total" = "PANSS Total (T1)",
-  "PANSS2.total" = "PANSS Total (T2)",
-  "PANSS3.total" = "PANSS Total (T3)",
-  "gender" = "Gender",
-  "age" = "Age",
-  "mpvs_total_score" = "MPVS",
-  "employment_ever" = "Ever employed"
-)
 model_fiml_residuals <- round(
   change_df_labels(
     df = extract_cov_residuals(
@@ -105,7 +125,7 @@ model_fiml_residuals <- round(
         type = "cor.bollen"
       )
     ),
-    labels = VAR_LABELS
+    labels = MAPPING
   ),
   digits = 3
 )
@@ -129,24 +149,24 @@ parameters_model_fiml_unstd <- Lmisc::modify_parameter_estimates(
 
 # #
 # model_modified <- "
-# PANSS1.total ~ gender
+# PANSS1.total ~ gender_fct
 # PANSS1.total ~ age
-# PANSS1.total ~ employment_ever
+# PANSS1.total ~ employment_ever_fct
 #
 #
-# PANSS2.total ~ gender
+# PANSS2.total ~ gender_fct
 # PANSS2.total ~ age
-# PANSS2.total ~ employment_ever
+# PANSS2.total ~ employment_ever_fct
 # PANSS2.total ~ PANSS1.total
 #
-# PANSS3.total ~ gender
+# PANSS3.total ~ gender_fct
 # PANSS3.total ~ age
-# PANSS3.total ~ employment_ever
+# PANSS3.total ~ employment_ever_fct
 # PANSS3.total ~ PANSS2.total
 # PANSS3.total ~ PANSS1.total
 #
 #
-# mpvs_total_score ~ gender
+# mpvs_total_score ~ gender_fct
 # mpvs_total_score ~ age
 # mpvs_total_score ~ PANSS1.total
 # mpvs_total_score ~ PANSS2.total
@@ -158,7 +178,7 @@ parameters_model_fiml_unstd <- Lmisc::modify_parameter_estimates(
 #
 # model_fiml_modified <- sem(
 #   model = model_modified,
-#   data = df_imp,
+#   data = df_selected,
 #   missing = "fiml"
 # )
 # summary(model_fiml_modified)
@@ -174,7 +194,7 @@ parameters_model_fiml_unstd <- Lmisc::modify_parameter_estimates(
 #           type = "cor.bollen"
 #         )
 #       ),
-#       labels = VAR_LABELS
+#       labels = MAPPING
 #     ),
 #     digits = 3
 #   ),
@@ -198,32 +218,37 @@ parameters_model_fiml_unstd <- Lmisc::modify_parameter_estimates(
 # Do not use semTools, it's deprecated
 library(lavaan.mi)
 print(sys.nframe())
-if (sys.nframe() %in% c(0, 4)) {
-  if (exists("imp_data") == F) {
-    if (file.exists("imp.Rdata")) {
-      load("imp.Rdata")
-    } else {
-      source("imputations.R")
-    }
+# if (sys.nframe() %in% c(0, 4)) {
+if (exists("imp_data") == F) {
+  if (file.exists("imp.Rdata")) {
+    load("imp.Rdata")
+  } else {
+    source("imputations.R")
   }
 }
-
+# }
 
 model <- "
 PANSS1.total ~ gender
 PANSS1.total ~ age
 PANSS1.total ~ employment_ever
 
-
 PANSS2.total ~ gender
 PANSS2.total ~ age
 PANSS2.total ~ employment_ever
 PANSS2.total ~ PANSS1.total
+PANSS2.total ~ mpvs_total_score
+
+PANSS3.total ~ gender
+PANSS3.total ~ age
+PANSS3.total ~ employment_ever
+PANSS3.total ~ PANSS1.total
+PANSS3.total ~ PANSS2.total
+PANSS3.total ~ mpvs_total_score
 
 mpvs_total_score ~ gender
 mpvs_total_score ~ age
 mpvs_total_score ~ PANSS1.total
-mpvs_total_score ~ PANSS2.total
 "
 
 
@@ -231,6 +256,7 @@ fit_mi <- sem.mi(
   model = model,
   data = imp_data
 )
+# modindices.mi(fit_mi)
 summary(fit_mi)
 parameterEstimates.mi(fit_mi)
 
@@ -245,9 +271,7 @@ parameters_model_mi <- modify_parameter_estimates(
 
 
 # Raw
-resid_fit_mi <- as.data.frame(resid(fit_mi))
-resid_fit_mi
-
+# resid_fit_mi <- as.data.frame(resid(fit_mi))
 
 # Corralated residuals
 model_mi_residuals <- round(
@@ -258,7 +282,7 @@ model_mi_residuals <- round(
         type = "cor.bollen"
       )
     ),
-    labels = VAR_LABELS
+    labels = MAPPING
   ),
   digits = 3
 )
