@@ -150,7 +150,7 @@
     },
     "Lmisc": {
       "Package": "Lmisc",
-      "Version": "0.1.1",
+      "Version": "0.1.3",
       "Source": "GitHub",
       "Type": "Package",
       "Title": "Miscellaneous functions",
@@ -183,14 +183,16 @@
       "Depends": [
         "R (>= 4.1)"
       ],
-      "Author": "Lab Asim [aut, cre]",
-      "Maintainer": "Lab Asim <example@example.com>",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteUsername": "LabAsim",
       "RemoteRepo": "Lmisc",
-      "RemoteRef": "main",
-      "RemoteSha": "dbb949dbaa3f2a5f67f88448c8e3f7758a1d4339"
+      "RemoteUsername": "LabAsim",
+      "RemotePkgRef": "https://github.com/LabAsim/Lmisc",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "dab60589c8966e5f426965c0d33e7afd90740e42",
+      "NeedsCompilation": "no",
+      "Author": "Lab Asim [aut, cre]",
+      "Maintainer": "Lab Asim <example@example.com>"
     },
     "MASS": {
       "Package": "MASS",
