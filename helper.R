@@ -618,14 +618,8 @@ wrap_edges <- function(edges, parameters) {
       ci.upper = ci.upper
     )
   edges$curvature_amount <- 0
-  edges$gap <- -1
+
   edges <- edges %>%
-    mutate(
-      gap = case_when(
-        from == "PANSS Total (T1)" & to == "PANSS Total (T3)" ~ 3,
-        .default = gap
-      )
-    ) |>
     mutate(
       curvature = case_when(
         from == "PANSS Total (T1)" & to == "PANSS Total (T3)" ~ 1,
@@ -651,7 +645,7 @@ wrap_edges <- function(edges, parameters) {
         # from == "MPVS12" & to == "MPVS16" ~ 0.8,
         from == "PANSS Total (T1)" & to == "PANSS Total (T3)" ~ 0.6,
         from == "Gender" & to == "PANSS Total (T2)" ~ 0.75,
-        from == "Gender" & to == "PANSS Total (T3)" ~ 0.4,
+        from == "Gender" & to == "PANSS Total (T3)" ~ 0.38,
         from == "Ever employed" & to == "PANSS Total (T1)" ~ 0.6,
         from == "PANSS Total (T1)" & to == "MPVS" ~ 0.3,
         from == "Ever employed" & to == "PANSS Total (T2)" ~ 0.5,
@@ -675,7 +669,16 @@ wrap_edges <- function(edges, parameters) {
         from == "Age" & to == "PANSS Total (T1)" ~ 0,
         .default = 0.5
       )
+    ) |>
+    mutate(
+      scale_factor = case_when(
+        from == "PANSS Total (T1)" & to == "PANSS Total (T2)" ~ 0.8,
+        from == "PANSS Total (T2)" & to == "PANSS Total (T3)" ~ 0.8,
+        from == "PANSS Total (T1)" & to == "PANSS Total (T3)" ~ 0.85,
+        .default = 1
+      )
     )
+
   # edges %>%
   # mutate(
   #   hjust = case_when(
