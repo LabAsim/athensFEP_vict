@@ -88,10 +88,10 @@ summary_all2 <- needed |>
   modify_footnote(everything() ~ NA) |>
   # This functions converts gtsummary to gt
   bstfun::bold_italicize_group_labels(bold = T) |>
-  gt::tab_header(
-    title = "Table 1. Participants characteristics",
-    subtitle = ""
-  ) |>
+  # gt::tab_header(
+  #   title = "", # Table 1. Participants characteristics
+  #   subtitle = ""
+  # ) |>
   gt::tab_options(heading.subtitle.font.size = "20px") |>
   gt::tab_footnote(
     footnote = "",
@@ -203,10 +203,10 @@ table_corr_mat_mpvs_dcq <- corr_display |>
   #   decimals = 2
   # ) |>
   gt::tab_options(heading.subtitle.font.size = "20pt") |>
-  gt::tab_header(
-    title = "Table 2. Spearman correlation matrix",
-    subtitle = ""
-  ) |>
+  # gt::tab_header(
+  #   title = "Table 2. Spearman correlation matrix",
+  #   subtitle = ""
+  # ) |>
   gt::tab_footnote(
     footnote = paste(
       "PANSS: Positive and Negative Syndrome Scale;",
